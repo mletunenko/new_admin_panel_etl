@@ -33,7 +33,6 @@ class Genre(UUIDMixin, TimeStampedMixin):
         db_table = 'content"."genre'
         verbose_name = _('genre')
         verbose_name_plural = _('genres')
-        ordering = ('name',)
 
 
 class Person(UUIDMixin, TimeStampedMixin):
@@ -89,7 +88,6 @@ class FilmWork(UUIDMixin, TimeStampedMixin):
         db_table = 'content"."film_work'
         verbose_name = _('film')
         verbose_name_plural = _('films')
-        ordering = ['-creation_date']
         indexes = [
             models.Index(
                 fields=['creation_date', 'rating'],

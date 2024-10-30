@@ -1,33 +1,28 @@
 from datetime import datetime
 from logging import getLogger
 
-
 import backoff
 import django
 from django.conf import settings
 from django.db import OperationalError
 from django.db.models import Q
-from movies.models import FilmWork, Genre, Person
-
+from movies.models import FilmWork, GenreFilmWork, PersonFilmWork
 
 logger = getLogger(__name__)
 
+
 class DataFetcher:
-    # @backoff.on_exception(backoff.expo, django.db.OperationalError, max_tries=10)
+    @backoff.on_exception(backoff.expo, [django.db.OperationalError, django.db.utils.OperationalError], max_tries=3)
     def get_filmwork_query_set(self, from_date: datetime=None):
         try:
+            base_qs = FilmWork.objects.order_by('id')
             if not from_date:
-                return FilmWork.objects.prefetch_related('genres', 'personfilmwork_set').order_by('id').all()
+                return base_qs
             else:
-                modified_genre_id_list = [str(record['id']) for record in Genre.objects.filter(modified__gte=from_date).values()]
-                modified_person_id_list = [str(record['id']) for record in Person.objects.filter(modified__gte=from_date).values()]
-                return (FilmWork.objects
-                        .prefetch_related('genres', 'personfilmwork_set')
-                        .order_by('id')
-                        .filter(Q(modified__gte=from_date)|
-                                Q(genres__id__in=modified_genre_id_list)|
-                                Q(persons__id__in=modified_person_id_list))
-                        .distinct())
+                modified_by_genre_film_work_ids_qs = GenreFilmWork.objects.filter(genre__modified__gt=from_date).values_list('film_work_id', flat=True)
+                modified_by_person_film_work_ids_qs = PersonFilmWork.objects.filter(person__modified__gt=from_date).values_list('film_work_id', flat=True)
+                modified_ids_qs = modified_by_genre_film_work_ids_qs.union(modified_by_person_film_work_ids_qs)
+                return base_qs.filter(Q(modified__gte=from_date)| Q(id__in=modified_ids_qs))
         except OperationalError as e:
             logger.error(f'{datetime.now()} Нет соединения с базой данных: {e}')
             raise e
