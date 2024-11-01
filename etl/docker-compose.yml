@@ -23,6 +23,7 @@ services:
       - service
     ports:
       - "80:80"
+    restart: always
 
   elasticsearch:
     image: elasticsearch:8.6.2
@@ -35,19 +36,17 @@ services:
       - "discovery.type=single-node"
       - "xpack.security.enabled=false"
       - "ES_JAVA_OPTS=-Xms200m -Xmx200m"
+    restart: always
 
   postgres:
     image: postgres:16
     volumes:
       - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_DB: movies_database
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+    env_file:
+      - postgres.env
     command:
       ["postgres", "-c", "log_statement=all"]
+    restart: always
 
   swagger:
     image: swaggerapi/swagger-ui:v5.17.14
@@ -58,6 +57,7 @@ services:
     environment:
       SWAGGER_JSON: /swagger.yaml
       BASE_URL: "/swagger/"
+    restart: always
 
   service:
     <<: [*app]
@@ -78,3 +78,4 @@ services:
     volumes:
       - sync_state:/opt/app/state
     command: [ "python", "manage.py", "postgres_to_es" ]
+    restart: always

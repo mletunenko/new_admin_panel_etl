@@ -1,16 +1,17 @@
 from datetime import datetime
 from logging import getLogger
-from wsgiref.validate import validator
 
 import backoff
 from elastic_transport import ConnectionError
-from pydantic.v1 import ValidationError
-from pydantic_core._pydantic_core import ValidationError
 from postgres_to_es.data_fetcher import DataFetcher
 from postgres_to_es.elastic_connector import ElasticsearchConnector
-
 from postgres_to_es.pydantic_models import FilmWorkModel
+from pydantic.v1 import ValidationError
+from pydantic_core._pydantic_core import ValidationError
+
+
 logger = getLogger(__name__)
+
 
 class DataSyncService:
 
@@ -42,12 +43,7 @@ class DataSyncService:
             return []
         return [item.model_dump() for item in transformed_batch]
 
-    @backoff.on_exception(backoff.expo, ConnectionError, max_tries=15)
     def transfer_data(self, timestamp):
-        try:
-            for batch in self.data_fetcher.get_filmwork_batch(timestamp):
-                validated_batch = self.validate_bacth(batch)
-                self.es_connector.load_data(validated_batch)
-        except ConnectionError as e:
-            logger.error(f'{datetime.now()} Не удалось установить соединение с Elasticsearch: {e}')
-            raise e
+        for batch in self.data_fetcher.get_filmwork_batch(timestamp):
+            validated_batch = self.validate_bacth(batch)
+            self.es_connector.load_data(validated_batch)

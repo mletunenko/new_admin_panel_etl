@@ -35,16 +35,21 @@ def run():
     syncronizer.prepare_index()
     syncronizer.create_data_fetcher()
     state = StateService(settings.PG_TO_ES_STATE_FILE_NAME)
-    timestamp = state.get_value('timestamp')
-
     logger.info('Сервис синхронизации pg_to_es запущен')
 
+    # Антон, я не обнаружила кейса, который ты описал в ревью:
+    # Поскольку я сначала беру новый timestamp, потом читаю и пишу данные, а потом записываю тот самый timestamp
+    # то данные не будут потеряны, они попадут в следующую итерацию, и этот подход мне понравился больше, чем
+    # вычисление максимального created/modified с последующей его передачей между функциями вверх и вниз по стеку.
+    # Единственное место для потери которое я обнаружила после ревью это при случае между первым чтением из not none state'а и
+    # запоминанием новой временной метки, поэтому я перенесла запоминание new_timestamp выше чтения timestamp
+    # если я где-то ошибаюсь, то прошу пошагово описать кейс
     while not shutdown_flag:
         new_timestamp = str(timezone.now())
+        timestamp = state.get_value('timestamp')
         logger.info('Запущена итерация синхронизации')
         syncronizer.transfer_data(timestamp)
         state.set_value('timestamp', new_timestamp)
-        timestamp = new_timestamp
         logger.info('Завершена итерация синхронизации')
         for _ in range(3600):
             if shutdown_flag:
