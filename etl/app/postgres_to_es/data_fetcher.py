@@ -6,7 +6,7 @@ import django
 from django.conf import settings
 from django.db import OperationalError
 from django.db.models import Q
-from movies.models import FilmWork, GenreFilmWork, PersonFilmWork
+from movies.models import FilmWork, GenreFilmWork, PersonFilmWork, Genre, Person
 
 logger = getLogger(__name__)
 
@@ -38,7 +38,7 @@ class DataFetcher:
         for relation in m2m:
             person_dict = {
                 'id': str(relation.person.id),
-                'name': relation.person.full_name
+                'full_name': relation.person.full_name
             }
             match relation.role:
                 case 'actor':
@@ -71,6 +71,61 @@ class DataFetcher:
             batch = []
             for filmwork in result:
                 obj = self.get_filmwork_dict(filmwork)
+                batch.append(obj)
+            yield batch
+            offset += settings.PG_TO_ES_BATCH_SIZE
+
+
+    @backoff.on_exception(backoff.expo, [django.db.OperationalError, django.db.utils.OperationalError], max_tries=3)
+    def get_genre_query_set(self, from_date: datetime=None):
+        try:
+            base_qs = Genre.objects.order_by('id').values('id', 'name', 'description')
+            if not from_date:
+                return base_qs
+            else:
+                return base_qs.filter(modified__gte=from_date)
+        except OperationalError as e:
+            logger.error(f'{datetime.now()} Нет соединения с базой данных: {e}')
+            raise e
+
+    def get_genre_batch(self, from_date: datetime = None):
+        qs = self.get_genre_query_set(from_date)
+        offset = 0
+        while result := qs[offset:offset + settings.PG_TO_ES_BATCH_SIZE]:
+            batch = []
+            for genre in result:
+                obj = {
+                    'id': str(genre['id']),
+                    'name': genre['name'],
+                    'description': genre['description']
+                }
+                batch.append(obj)
+            yield batch
+            offset += settings.PG_TO_ES_BATCH_SIZE
+
+
+    @backoff.on_exception(backoff.expo, [django.db.OperationalError, django.db.utils.OperationalError], max_tries=3)
+    def get_person_query_set(self, from_date: datetime=None):
+        try:
+            base_qs = Person.objects.order_by('id').values('id', 'full_name')
+            if not from_date:
+                return base_qs
+            else:
+                return base_qs.filter(modified__gte=from_date)
+        except OperationalError as e:
+            logger.error(f'{datetime.now()} Нет соединения с базой данных: {e}')
+            raise e
+
+    def get_person_batch(self, from_date: datetime = None):
+        qs = self.get_person_query_set(from_date)
+        offset = 0
+        while result := qs[offset:offset + settings.PG_TO_ES_BATCH_SIZE]:
+            batch = []
+            for person in result:
+                obj = {
+                    'id': str(person['id']),
+                    'full_name': person['full_name']
+                }
                 batch.append(obj)
             yield batch
             offset += settings.PG_TO_ES_BATCH_SIZE

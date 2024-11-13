@@ -5,11 +5,13 @@ from pydantic import BaseModel
 
 class GenreModel(BaseModel):
     id: str
+    name: str
+    description: str | None
 
 
 class PersonModel(BaseModel):
     id: str
-    name: str
+    full_name: str
 
 
 class FilmWorkModel(BaseModel):

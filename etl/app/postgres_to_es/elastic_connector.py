@@ -10,22 +10,21 @@ logger = getLogger(__name__)
 
 
 class ElasticsearchConnector:
-    def __init__(self, hosts, index, schema_file):
+    def __init__(self, hosts, indexes, schemas):
         self.client = Elasticsearch(hosts)
-        self.index = index
-        self.schema_file = schema_file
+        self.indexes = indexes
+        self.schemas = schemas
 
-    def create_index(self):
-        with open(self.schema_file) as f:
+    def create_index(self, index):
+        with open(self.schemas[index]) as f:
             schema = json.load(f)
-        self.client.indices.create(index=self.index, settings=schema['settings'], mappings=schema['mappings'])
+        self.client.indices.create(index=index, settings=schema['settings'], mappings=schema['mappings'])
 
     @backoff.on_exception(backoff.expo, ConnectionError, max_tries=15)
-    # Перенесла сюда backoff из  метода transfer_data
-    def load_data(self, batch):
+    def load_data(self, batch, index):
         documents = [
             {
-                '_index': self.index,
+                '_index': index,
                 '_id': item['id'],
                 '_source': item
             }

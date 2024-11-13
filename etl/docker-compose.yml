@@ -12,7 +12,6 @@ x-app: &app
     - ELASTIC_HOST=elasticsearch
     - SQL_HOST=postgres
 
-services:
   nginx:
     image: nginx:1.26
     volumes:
@@ -32,10 +31,12 @@ services:
       - "9200:9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
+      - /home/maria/ES_dumps:/usr/share/elasticsearch/snapshots
     environment:
       - "discovery.type=single-node"
       - "xpack.security.enabled=false"
       - "ES_JAVA_OPTS=-Xms200m -Xmx200m"
+      - "path.repo=/usr/share/elasticsearch/snapshots"
     restart: always
 
   postgres:

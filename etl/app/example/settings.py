@@ -149,8 +149,10 @@ ELASTIC_HOST = os.getenv('ELASTIC_HOST', '127.0.0.1')
 ELASTIC_PORT = os.getenv('ELASTIC_PORT', 9200)
 ELASTIC_URL = f'http://{ELASTIC_HOST}:{ELASTIC_PORT}'
 
-ES_INDEX = os.getenv('ES_INDEX', 'movies')
-ES_SCHEMA_FILE = os.getenv('ES_SCHEMA_FILE', 'es_schema.json')
+ES_INDEX = os.getenv('ES_INDEX', 'movies, genres, persons')
+ES_SCHEMA_MOVIES_FILE = os.getenv('ES_SCHEMA_MOVIES_FILE', 'es_schema_movies.json')
+ES_SCHEMA_GENRES_FILE = os.getenv('ES_SCHEMA_GENRES_FILE', 'es_schema_genres.json')
+ES_SCHEMA_PERSONS_FILE = os.getenv('ES_SCHEMA_PERSONS_FILE', 'es_schema_persons.json')
 
 LOGGING = {
     "version": 1,
