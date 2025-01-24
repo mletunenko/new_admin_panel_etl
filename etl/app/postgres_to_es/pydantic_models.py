@@ -3,9 +3,12 @@ from typing import List
 from pydantic import BaseModel
 
 
-class GenreModel(BaseModel):
+class ShortGenreModel(BaseModel):
     id: str
     name: str
+
+
+class GenreModel(ShortGenreModel):
     description: str | None
 
 
@@ -17,7 +20,7 @@ class PersonModel(BaseModel):
 class FilmWorkModel(BaseModel):
     id: str
     imdb_rating: float | None
-    genres: List[str]
+    genres: List[ShortGenreModel]
     title: str
     description: str | None
     directors_names: List[str]

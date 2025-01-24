@@ -3,54 +3,64 @@ volumes:
   esdata:
   sync_state:
 
-x-app: &app
-  build: app
-  restart: "unless-stopped"
-  env_file:
-    - .env
-  environment:
-    - ELASTIC_HOST=elasticsearch
-    - SQL_HOST=postgres
+services:
+  x-app: &app
+    build: app
+    networks:
+      - project_network
+    restart: "unless-stopped"
+    env_file:
+      - .env
+    environment:
+      - ELASTIC_HOST=admin_elasticsearch
+      - SQL_HOST=admin_postgres
 
-  nginx:
+  admin_nginx:
     image: nginx:1.26
+    networks:
+      - project_network
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./configs/nginx:/etc/nginx/conf.d:ro
       - static_files:/data
     depends_on:
-      - service
+      - admin_service
     ports:
-      - "80:80"
+      - "81:80"
     restart: always
 
-  elasticsearch:
+  admin_elasticsearch:
     image: elasticsearch:8.6.2
-    container_name: elasticsearch
-    ports:
-      - "9200:9200"
+#    ports:
+#      - "9200:9200"
+    networks:
+      - project_network
     volumes:
       - esdata:/usr/share/elasticsearch/data
       - /home/maria/ES_dumps:/usr/share/elasticsearch/snapshots
     environment:
       - "discovery.type=single-node"
       - "xpack.security.enabled=false"
-      - "ES_JAVA_OPTS=-Xms200m -Xmx200m"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - "path.repo=/usr/share/elasticsearch/snapshots"
     restart: always
 
-  postgres:
+  admin_postgres:
     image: postgres:16
-    volumes:
-      - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "30000:30000"
+    networks:
+      - project_network
     env_file:
       - postgres.env
     command:
       ["postgres", "-c", "log_statement=all"]
     restart: always
 
-  swagger:
+  admin_swagger:
     image: swaggerapi/swagger-ui:v5.17.14
+    networks:
+      - project_network
     volumes:
       - ./openapi.yaml:/swagger.yaml
     ports:
@@ -60,7 +70,7 @@ x-app: &app
       BASE_URL: "/swagger/"
     restart: always
 
-  service:
+  admin_service:
     <<: [*app]
     volumes:
       - static_files:/opt/app/static
@@ -68,15 +78,21 @@ x-app: &app
       - "8000"
     command: ["uwsgi", "--strict", "--ini", "uwsgi.ini"]
 
-  django-migrations:
+  admin_django-migrations:
     <<: [*app]
-    container_name: "django-migrations"
+    container_name: "admin_django-migrations"
     restart: "no"
     command: [ "python", "manage.py", "migrate" ]
+    depends_on:
+      - admin_postgres
 
-  postgres_to_es:
+  admin_postgres_to_es:
     <<: [*app]
     volumes:
       - sync_state:/opt/app/state
     command: [ "python", "manage.py", "postgres_to_es" ]
     restart: always
+
+networks:
+  project_network:
+    external: true

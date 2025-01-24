@@ -34,6 +34,7 @@ class DataFetcher:
         directors = []
         actors = []
         writers = []
+        genres = [{'id':str(genre.id), 'name': genre.name} for genre in filmwork.genres.all()]
         m2m = filmwork.personfilmwork_set.select_related('person')
         for relation in m2m:
             person_dict = {
@@ -53,7 +54,7 @@ class DataFetcher:
         return {
             'id': str(filmwork.id),
             'imdb_rating': filmwork.rating,
-            'genres': [genre.name for genre in filmwork.genres.all()],
+            'genres': genres,
             'title': filmwork.title,
             'description': filmwork.description,
             'directors_names': directors_names,
@@ -102,7 +103,6 @@ class DataFetcher:
                 batch.append(obj)
             yield batch
             offset += settings.PG_TO_ES_BATCH_SIZE
-
 
     @backoff.on_exception(backoff.expo, [django.db.OperationalError, django.db.utils.OperationalError], max_tries=3)
     def get_person_query_set(self, from_date: datetime=None):

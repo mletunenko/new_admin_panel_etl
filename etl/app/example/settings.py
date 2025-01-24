@@ -32,6 +32,9 @@ DEBUG = os.getenv('DEBUG', False) == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1, localhost').split(', ')
 
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:81',  # Укажите точный протокол, хост и порт
+]
 
 # Application definition
 
@@ -43,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'movies',
+    'user',
     'corsheaders',
     'postgres_to_es',
 ]
@@ -90,9 +94,6 @@ DATABASES = {
         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
         'HOST': os.getenv('SQL_HOST', '127.0.0.1'),
         'PORT': os.getenv('SQL_PORT', 5432),
-        'OPTIONS': {
-            'options': os.getenv('SQL_OPTIONS'),
-        },
     }
 }
 
@@ -209,3 +210,9 @@ LOGGING = {
         },
     },
 }
+
+AUTHENTICATION_BACKENDS = [
+    'movies.backends.CustomBackend',
+]
+
+AUTH_USER_MODEL = 'user.User'

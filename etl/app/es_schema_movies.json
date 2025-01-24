@@ -1,6 +1,8 @@
 {
   "settings": {
     "refresh_interval": "1s",
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
     "analysis": {
       "filter": {
         "english_stop": {
@@ -49,7 +51,17 @@
         "type": "float"
       },
       "genres": {
-        "type": "keyword"
+        "type": "nested",
+        "dynamic": "strict",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "name": {
+            "type": "text",
+            "analyzer": "ru_en"
+          }
+        }
       },
       "title": {
         "type": "text",

@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import uuid
 
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+# from movies.managers import UserManager
 
 
 class TimeStampedMixin(models.Model):
@@ -30,7 +34,7 @@ class Genre(UUIDMixin, TimeStampedMixin):
         return self.name
 
     class Meta:
-        db_table = 'content"."genre'
+        db_table = 'genre'
         verbose_name = _('genre')
         verbose_name_plural = _('genres')
 
@@ -42,7 +46,7 @@ class Person(UUIDMixin, TimeStampedMixin):
         return self.full_name
 
     class Meta:
-        db_table = 'content"."person'
+        db_table = 'person'
         verbose_name = _('person')
         verbose_name_plural = _('persons')
 
@@ -55,10 +59,11 @@ class FilmTypes(models.TextChoices):
 class FilmWork(UUIDMixin, TimeStampedMixin):
     title = models.CharField(_('title'), max_length=255)
     description = models.TextField(_('description'), blank=True)
-    creation_date = models.DateField(_('creation date'), blank=True)
+    creation_date = models.DateField(_('creation date'), null=True)
     rating = models.FloatField(
         _('rating'),
         blank=True,
+        null=True,
         validators=[
             MinValueValidator(1.0),
             MaxValueValidator(10.0),
@@ -85,7 +90,7 @@ class FilmWork(UUIDMixin, TimeStampedMixin):
         return self.title
 
     class Meta:
-        db_table = 'content"."film_work'
+        db_table = 'film_work'
         verbose_name = _('film')
         verbose_name_plural = _('films')
         indexes = [
@@ -109,7 +114,7 @@ class GenreFilmWork(UUIDMixin):
         return self.genre.name
 
     class Meta:
-        db_table = 'content"."genre_film_work'
+        db_table = 'genre_film_work'
         verbose_name = _('genre')
         verbose_name_plural = _('film genres')
         constraints = [
@@ -145,7 +150,7 @@ class PersonFilmWork(UUIDMixin):
         return self.person.full_name
 
     class Meta:
-        db_table = 'content"."person_film_work'
+        db_table = 'person_film_work'
         verbose_name = _('person')
         verbose_name_plural = _('film persons')
         constraints = [

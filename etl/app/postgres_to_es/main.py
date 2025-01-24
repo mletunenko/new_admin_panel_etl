@@ -48,7 +48,7 @@ def run():
         syncronizer.transfer_data(timestamp)
         state.set_value('timestamp', new_timestamp)
         logger.info('Завершена итерация синхронизации')
-        for _ in range(3600):
+        for _ in range(300):
             if shutdown_flag:
                 logger.info('Завершение работы сервиса postgres_to_es')
                 sys.exit()
