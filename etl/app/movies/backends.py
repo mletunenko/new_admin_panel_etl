@@ -3,10 +3,9 @@ import json
 from enum import StrEnum, auto
 
 import requests
-from django.contrib.auth.backends import BaseBackend
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseForbidden
+from django.contrib.auth.backends import BaseBackend
 
 User = get_user_model()
 
@@ -19,21 +18,24 @@ class Roles(StrEnum):
 
 class CustomBackend(BaseBackend):
     def authenticate(self, request, username=None, password=None):
-        AUTH_HOST = "127.0.0.1:8000"
-        AUTH_API_LOGIN_URL = f"http://{AUTH_HOST}/auth/login"
-        url = AUTH_API_LOGIN_URL
+        url = settings.AUTH_LOGIN_URL
         payload = {'email': username, 'password': password}
         response = requests.post(url, data=json.dumps(payload))
         if response.status_code != http.HTTPStatus.OK:
             return None
         data = response.json()
-        try:
-            user, created = User.objects.get_or_create(id=data['id'], )
-            user.username = data.get('email')
-            user.is_staff = user.is_superuser = data['role'] in ['admin', 'superuser']
+
+        username = data.get('email')
+        is_staff = is_superuser = data['role'] in ['admin', 'superuser']
+        user, created = User.objects.get_or_create({"username": username,
+                                                    "is_staff": is_staff,
+                                                    "is_superuser": is_superuser},
+                                                   id=data['id'], )
+        if not created:
+            user.username = username
+            user.is_staff = is_staff
+            user.is_superuser = is_superuser
             user.save()
-        except Exception:
-            return None
         return user
 
     def get_user(self, user_id):

@@ -1,3 +1,4 @@
 POSTGRES_DB=movies_database
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
+PGPORT=30000

@@ -93,10 +93,9 @@ DATABASES = {
         'USER': os.getenv('POSTGRES_USER'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
         'HOST': os.getenv('SQL_HOST', '127.0.0.1'),
-        'PORT': os.getenv('SQL_PORT', 5432),
+        'PORT': os.getenv('SQL_PORT', 30000),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -154,6 +153,12 @@ ES_INDEX = os.getenv('ES_INDEX', 'movies, genres, persons')
 ES_SCHEMA_MOVIES_FILE = os.getenv('ES_SCHEMA_MOVIES_FILE', 'es_schema_movies.json')
 ES_SCHEMA_GENRES_FILE = os.getenv('ES_SCHEMA_GENRES_FILE', 'es_schema_genres.json')
 ES_SCHEMA_PERSONS_FILE = os.getenv('ES_SCHEMA_PERSONS_FILE', 'es_schema_persons.json')
+
+AUTH_HOST = os.getenv('AUTH_HOST', '127.0.0.1:8000')
+AUTH_LOGIN_PATH = os.getenv('AUTH_LOGIN_PATH', 'auth/login')
+AUTH_LOGOUT_PATH = os.getenv('AUTH_LOGOUT_PATH', 'auth/login')
+AUTH_LOGIN_URL = f'http://{AUTH_HOST}/{AUTH_LOGIN_PATH}'
+AUTH_LOGOUT_URL = f'http://{AUTH_HOST}/{AUTH_LOGOUT_PATH}'
 
 LOGGING = {
     "version": 1,

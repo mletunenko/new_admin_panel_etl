@@ -12,6 +12,7 @@ services:
     env_file:
       - .env
     environment:
+      - AUTH_HOST=auth_nginx
       - ELASTIC_HOST=admin_elasticsearch
       - SQL_HOST=admin_postgres
 
