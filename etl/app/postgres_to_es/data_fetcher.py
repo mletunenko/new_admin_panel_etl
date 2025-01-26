@@ -6,7 +6,11 @@ import django
 from django.conf import settings
 from django.db import OperationalError
 from django.db.models import Q
-from movies.models import FilmWork, GenreFilmWork, PersonFilmWork, Genre, Person
+from movies.models import (FilmWork,
+                           Genre,
+                           GenreFilmWork,
+                           Person,
+                           PersonFilmWork)
 
 logger = getLogger(__name__)
 

@@ -3,13 +3,13 @@ from logging import getLogger
 
 import backoff
 from elastic_transport import ConnectionError
-
 from postgres_to_es.data_fetcher import DataFetcher
 from postgres_to_es.elastic_connector import ElasticsearchConnector
-from postgres_to_es.pydantic_models import FilmWorkModel, GenreModel, PersonModel
+from postgres_to_es.pydantic_models import (FilmWorkModel,
+                                            GenreModel,
+                                            PersonModel)
 from pydantic.v1 import ValidationError
 from pydantic_core._pydantic_core import ValidationError
-
 
 logger = getLogger(__name__)
 
